@@ -2,8 +2,8 @@
  * Jay – Shared protocol constants
  * Use in firmware and desktop; Android/iOS should match these values.
  */
-#ifndef HELMET_INTERCOM_PROTOCOL_CONSTANTS_H
-#define HELMET_INTERCOM_PROTOCOL_CONSTANTS_H
+#ifndef JAY_PROTOCOL_CONSTANTS_H
+#define JAY_PROTOCOL_CONSTANTS_H
 
 #ifdef __cplusplus
 extern "C" {
