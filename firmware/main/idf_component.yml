@@ -1,0 +1,4 @@
+## Jay – main component dependencies
+## Opus codec (optional: comment out to build with PCM passthrough only)
+dependencies:
+  esphome/micro-opus: "^0.3.2"

@@ -1,0 +1,38 @@
+# ESP-IDF
+firmware/build/
+firmware/sdkconfig
+firmware/dependencies.lock
+firmware/managed_components/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
+android/captures/
+*.apk
+*.aab
+
+# Desktop
+desktop/__pycache__/
+desktop/*/__pycache__/
+desktop/*.pyc
+desktop/venv/
+desktop/linux/build/
+desktop/win/build/
+desktop/mac/build/
+
+# iOS
+ios/build/
+ios/Pods/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# General
+.DS_Store
+*.swp
+*.swo
+*~

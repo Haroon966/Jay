@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jay</string>
+    <string name="start_intercom">Start Intercom</string>
+    <string name="stop_intercom">Stop Intercom</string>
+    <string name="status_waiting">Waiting for peer…</string>
+    <string name="status_connected">Connected to %1$s</string>
+    <string name="notification_channel_name">Intercom</string>
+    <string name="notification_title">Intercom active</string>
+</resources>
