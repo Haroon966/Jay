@@ -55,6 +55,7 @@ static void spp_parse_rx(const uint8_t *data, uint16_t len);
 static void spp_task_loop(void *arg);
 static void spp_cleanup_runtime(void);
 static void bump_discovery_backoff(void);
+static bool disc_res_name_has_prefix(const esp_bt_gap_cb_param_t *param, const char *prefix);
 static size_t ring_count(size_t head, size_t tail);
 static uint8_t ring_peek_at(const uint8_t *buf, size_t tail, size_t offset);
 static void ring_drop_bytes(size_t *tail, size_t count);
@@ -71,6 +72,36 @@ static void bump_discovery_backoff(void)
         if (s_discovery_backoff_ms > DISCOVERY_BACKOFF_MAX_MS)
             s_discovery_backoff_ms = DISCOVERY_BACKOFF_MAX_MS;
     }
+}
+
+static bool disc_res_name_has_prefix(const esp_bt_gap_cb_param_t *param, const char *prefix)
+{
+    if (!param || !prefix)
+        return false;
+
+    size_t prefix_len = strlen(prefix);
+    for (int i = 0; i < param->disc_res.num_prop; ++i) {
+        const esp_bt_gap_dev_prop_t *prop = &param->disc_res.prop[i];
+        if (!prop->val || prop->len <= 0)
+            continue;
+
+        if (prop->type == ESP_BT_GAP_DEV_PROP_BDNAME) {
+            if ((size_t)prop->len >= prefix_len && memcmp(prop->val, prefix, prefix_len) == 0)
+                return true;
+            continue;
+        }
+
+        if (prop->type == ESP_BT_GAP_DEV_PROP_EIR) {
+            uint8_t name_len = 0;
+            uint8_t *name = esp_bt_gap_resolve_eir_data((uint8_t *)prop->val, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &name_len);
+            if (!name) {
+                name = esp_bt_gap_resolve_eir_data((uint8_t *)prop->val, ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, &name_len);
+            }
+            if (name && (size_t)name_len >= prefix_len && memcmp(name, prefix, prefix_len) == 0)
+                return true;
+        }
+    }
+    return false;
 }
 
 static size_t ring_count(size_t head, size_t tail)
@@ -211,18 +242,15 @@ static void gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     case ESP_BT_GAP_DISC_RES_EVT:
         if (s_connected || s_state != SPP_STATE_SCANNING)
             break;
-        if (param->disc_res.num_prop && param->disc_res.bda) {
-            const char *name = (const char *)param->disc_res.bdname;
-            if (name && strncmp(name, INTERCOM_DEVICE_NAME_PREFIX, strlen(INTERCOM_DEVICE_NAME_PREFIX)) == 0) {
-                memcpy(s_peer_bda, param->disc_res.bda, sizeof(esp_bd_addr_t));
-                s_state = SPP_STATE_CONNECTING;
-                esp_bt_gap_cancel_discovery();
-                esp_err_t err = esp_spp_start_discovery(s_peer_bda);
-                if (err != ESP_OK) {
-                    ESP_LOGW(TAG, "SPP service discovery start failed err=0x%x", (unsigned int)err);
-                    s_state = SPP_STATE_IDLE;
-                    bump_discovery_backoff();
-                }
+        if (param->disc_res.num_prop && disc_res_name_has_prefix(param, INTERCOM_DEVICE_NAME_PREFIX)) {
+            memcpy(s_peer_bda, param->disc_res.bda, sizeof(esp_bd_addr_t));
+            s_state = SPP_STATE_CONNECTING;
+            esp_bt_gap_cancel_discovery();
+            esp_err_t err = esp_spp_start_discovery(s_peer_bda);
+            if (err != ESP_OK) {
+                ESP_LOGW(TAG, "SPP service discovery start failed err=0x%x", (unsigned int)err);
+                s_state = SPP_STATE_IDLE;
+                bump_discovery_backoff();
             }
         }
         break;
@@ -244,7 +272,7 @@ static void spp_task_loop(void *arg)
         if (!s_connected && s_state == SPP_STATE_IDLE) {
             TickType_t now = xTaskGetTickCount();
             if ((now - last_discovery) >= pdMS_TO_TICKS(s_discovery_backoff_ms)) {
-                esp_err_t err = esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 10);
+                esp_err_t err = esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 10, 0);
                 if (err == ESP_OK) {
                     s_state = SPP_STATE_SCANNING;
                 } else {

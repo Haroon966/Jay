@@ -5,6 +5,7 @@
 #define JAY_AUDIO_TASK_H
 
 #include "app_config.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
