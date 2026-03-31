@@ -57,7 +57,6 @@ int audio_task_start(void)
     }
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM, I2S_ROLE_MASTER);
-    i2s_chan_config_t rx_cfg = chan_cfg;
     i2s_chan_config_t tx_cfg = chan_cfg;
     esp_err_t err = i2s_new_channel(&tx_cfg, &s_tx_handle, &s_rx_handle);
     if (err != ESP_OK) {
