@@ -9,7 +9,6 @@ idf_component_register(
     REQUIRES
         driver
         bt
-        esp_spp
         nvs_flash
         freertos
         esp_log
