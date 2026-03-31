@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /**
- * Start audio task: init I2S and codec, start capture/playback loop.
+ * Start audio tasks: init I2S and codec, start capture/decode/playback loops.
  * Must call spp_task_start() with audio_task_spp_rx_cb and NULL before or after.
  * Returns 0 on success.
  */
@@ -20,7 +20,8 @@ int audio_task_start(void);
 void audio_task_stop(void);
 
 /**
- * SPP receive callback: decode and queue for playback. Pass this to spp_task_start.
+ * SPP receive callback: queue payload for decode/playback task.
+ * Keep callback work minimal; this runs in SPP callback context.
  */
 void audio_task_spp_rx_cb(const uint8_t *payload, uint16_t payload_len, void *arg);
 

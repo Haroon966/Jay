@@ -1,0 +1,83 @@
+name: Interop Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_hardware_checks:
+        description: "Run hardware-required checks (self-hosted only)"
+        required: false
+        default: "false"
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  software-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Execute software interop gate
+        run: |
+          mkdir -p artifacts
+          python3 tests/test_packet_format.py | tee artifacts/test_packet_format.log
+          python3 tests/test_constants_sync.py | tee artifacts/test_constants_sync.log
+          python3 tests/test_stream_resilience.py --output artifacts/stream_resilience_metrics.json | tee artifacts/test_stream_resilience.log
+
+      - name: Store software metrics artifact
+        run: |
+          python3 tests/run_software_gate_report.py \
+            --output artifacts/software_gate_metrics.json \
+            --resilience-metrics artifacts/stream_resilience_metrics.json \
+            --require-log artifacts/test_packet_format.log \
+            --require-log artifacts/test_constants_sync.log \
+            --require-log artifacts/test_stream_resilience.log
+
+      - name: Upload software artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-gate-metrics
+          path: |
+            artifacts/software_gate_metrics.json
+            artifacts/stream_resilience_metrics.json
+            artifacts/test_packet_format.log
+            artifacts/test_constants_sync.log
+            artifacts/test_stream_resilience.log
+
+  hardware-matrix:
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.run_hardware_checks == 'true' }}
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        path:
+          - android-esp32
+          - desktop-esp32
+          - esp32-esp32
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Execute hardware matrix script
+        run: |
+          mkdir -p artifacts
+          evidence_path="artifacts/${{ matrix.path }}_evidence.json"
+          if [ ! -f "$evidence_path" ]; then
+            echo "Missing evidence file: $evidence_path"
+            echo '{"connectivity":false,"audio_bidir":false,"recovery":false,"malformed_resilience":false}' > "$evidence_path"
+          fi
+          python3 tests/run_hardware_matrix_check.py \
+            --path "${{ matrix.path }}" \
+            --evidence "$evidence_path" \
+            --output "artifacts/${{ matrix.path }}.json"
+
+      - name: Upload hardware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-${{ matrix.path }}-metrics
+          path: artifacts/${{ matrix.path }}.json

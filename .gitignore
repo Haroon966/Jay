@@ -20,9 +20,15 @@ desktop/__pycache__/
 desktop/*/__pycache__/
 desktop/*.pyc
 desktop/venv/
+desktop/**/venv/
 desktop/linux/build/
 desktop/win/build/
 desktop/mac/build/
+venv/
+tests/__pycache__/
+protocol/__pycache__/
+Motolky/
+csr-bc05mm-intercom-for-motorcycle-helmet/
 
 # iOS
 ios/build/

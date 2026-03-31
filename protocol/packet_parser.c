@@ -13,7 +13,7 @@
  *
  * Returns: payload_len if a full packet is present (2 + N bytes available);
  *          0 if more data needed;
- *          (uint16_t)-1 on error (e.g. N > MAX_PAYLOAD_LEN).
+ *          (uint16_t)-1 on error (e.g. N == 0 or N > MAX_PAYLOAD_LEN).
  */
 uint16_t read_packet(const uint8_t *buf, size_t len, packet_result_t *out)
 {
@@ -21,7 +21,7 @@ uint16_t read_packet(const uint8_t *buf, size_t len, packet_result_t *out)
         return 0;
 
     uint16_t n = (uint16_t)buf[0] | ((uint16_t)buf[1] << 8);
-    if (n > MAX_PAYLOAD_LEN)
+    if (n == 0 || n > MAX_PAYLOAD_LEN)
         return (uint16_t)-1;
     if (len < PACKET_HEADER_SIZE + n)
         return 0;

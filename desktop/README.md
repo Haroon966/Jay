@@ -6,7 +6,22 @@ Same protocol over SPP (2-byte length + payload, Opus or PCM). Use for testing o
 
 - **Requirements**: Python 3.10+, `pybluez` or `bleak` (for BLE; for SPP use `bluetooth` module or `sdptool`/`rfcomm`).
 - **SPP**: Register SPP service with standard UUID, or connect to a device running the intercom (e.g. `rfcomm connect /dev/rfcomm0 <bdaddr> 1`).
-- **Script**: See `linux/intercom_spp_client.py` for a minimal client that connects via RFCOMM and uses the same packet format.
+- **Recommended setup**:
+  - `python3 -m venv desktop/linux/venv`
+  - `source desktop/linux/venv/bin/activate`
+  - `pip install -r requirements-dev.txt`
+  - `sudo apt install python3-bluez libportaudio2` (system dependencies for Bluetooth/audio)
+- **Scripts**:
+  - `linux/intercom_spp_client.py` – minimal SPP client (connect by BDADDR; packet send/receive, no audio).
+  - `linux/intercom_web_bridge.py` – **phone browser + desktop**: run on the desktop with a BDADDR; it starts a small web server. Open the printed URL on your phone’s browser (same WiFi) to use the intercom without installing the Android app. Requires `flask` and `flask-sock` (`pip install flask flask-sock`).
+
+## Relay mode (multi-peer step 1)
+
+`intercom_web_bridge.py` supports a phased step-1 relay mode:
+
+- `--relay` / `-r`: fan-out one talker stream to multiple listeners (no mixing).
+- `--max-clients=N`: admission limit for active browser listeners (default 4).
+- Without `--relay`, fallback behavior stays near 1:1.
 
 ## Windows
 

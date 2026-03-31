@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-/** Callback when a packet (length + payload) was received. Called from SPP callback context; copy data if needed. */
+/** Callback when a packet (length + payload) is received. Called from SPP callback context; keep work minimal. */
 typedef void (*spp_rx_cb_t)(const uint8_t *payload, uint16_t payload_len, void *arg);
 
 /**
@@ -29,7 +29,8 @@ void spp_task_stop(void);
 
 /**
  * Send one packet (2-byte length + payload). Thread-safe.
- * Returns 0 on success, -1 if not connected or error.
+ * Non-blocking enqueue for low-latency audio paths.
+ * Returns 0 on success, -1 if not connected or queue full/error.
  */
 int spp_task_send(const uint8_t *payload, uint16_t payload_len);
 

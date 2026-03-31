@@ -12,7 +12,8 @@ typedef struct {
 
 /**
  * Parse one packet from buf. See packet_parser.c.
- * Returns payload_len if full packet present; 0 if need more data; (uint16_t)-1 on error.
+ * Returns payload_len if full packet present; 0 if need more data; (uint16_t)-1 on error
+ * (for example zero-length or oversized payload).
  */
 uint16_t read_packet(const uint8_t *buf, size_t len, packet_result_t *out);
 

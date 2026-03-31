@@ -1,0 +1,19 @@
+{
+  "protocol_version": 1,
+  "spp_service_uuid": "00001101-0000-1000-8000-00805F9B34FB",
+  "device_name_prefix": "Helmet-",
+  "audio_sample_rate": 16000,
+  "audio_frame_ms": 20,
+  "audio_frame_samples": 320,
+  "codec_bitrate": 16000,
+  "packet_header_size": 2,
+  "max_payload_len": 512,
+  "intercom_rssi_threshold_dbm": -70,
+  "discovery_backoff_min_ms": 1000,
+  "discovery_backoff_max_ms": 12000,
+  "control_bytes": {
+    "mute": 0,
+    "unmute": 1,
+    "disconnect": 255
+  }
+}

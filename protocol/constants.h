@@ -10,7 +10,8 @@ extern "C" {
 #endif
 
 /* SPP service UUID (string for Android/BlueZ; use same on ESP32 SDP) */
-#define INTERCOM_SPP_SERVICE_UUID_STR "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+#define INTERCOM_PROTOCOL_VERSION  1
+#define INTERCOM_SPP_SERVICE_UUID_STR "00001101-0000-1000-8000-00805F9B34FB"
 
 /* Device name prefix for display and filtering */
 #define INTERCOM_DEVICE_NAME_PREFIX "Helmet-"
@@ -30,6 +31,8 @@ extern "C" {
 
 /* Auto-connect: minimum RSSI (dBm) to consider peer "in range" */
 #define INTERCOM_RSSI_THRESHOLD_DBM  (-70)
+#define DISCOVERY_BACKOFF_MIN_MS     1000
+#define DISCOVERY_BACKOFF_MAX_MS     12000
 
 /* Control bytes (first byte of payload when present) */
 #define INTERCOM_CTRL_MUTE        0x00

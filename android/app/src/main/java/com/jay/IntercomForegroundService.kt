@@ -19,9 +19,11 @@ class IntercomForegroundService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var sppManager: BluetoothSppManager? = null
     private var audioPipeline: AudioPipeline? = null
+    private var started = false
 
     override fun onCreate() {
         super.onCreate()
+        running = true
         val channelId = "intercom_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -47,28 +49,60 @@ class IntercomForegroundService : Service() {
             startForeground(1, notification)
         }
 
-        audioPipeline = AudioPipeline(serviceScope)
-        sppManager = BluetoothSppManager(
-            scope = serviceScope,
-            onConnected = { name ->
-                @Suppress("UNUSED_PARAMETER")
-                val n = name
-                // Could broadcast to Activity for UI update
-            },
-            onDisconnected = { },
-            onPayloadReceived = { payload -> audioPipeline?.playPayload(payload) }
-        )
-        sppManager?.start()
-        audioPipeline?.start { payload -> sppManager?.send(payload) }
+        startIntercomRuntime()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!started) {
+            startIntercomRuntime()
+        }
+        return START_STICKY
+    }
+
     override fun onDestroy() {
+        started = false
         sppManager?.stop()
         audioPipeline?.stop()
         serviceScope.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
+        running = false
+        broadcastStatus(BluetoothSppManager.Status.DISCONNECTED, null)
         super.onDestroy()
+    }
+
+    private fun broadcastStatus(status: BluetoothSppManager.Status, detail: String?) {
+        val intent = Intent(ACTION_INTERCOM_STATUS).apply {
+            setPackage(packageName)
+            putExtra(EXTRA_STATUS, status.name)
+            if (!detail.isNullOrBlank()) putExtra(EXTRA_DETAIL, detail)
+        }
+        sendBroadcast(intent)
+    }
+
+    private fun startIntercomRuntime() {
+        if (started) return
+        started = true
+        audioPipeline = AudioPipeline(serviceScope)
+        sppManager = BluetoothSppManager(
+            scope = serviceScope,
+            onStatusChanged = { status, detail -> broadcastStatus(status, detail) },
+            onConnected = { name ->
+                broadcastStatus(BluetoothSppManager.Status.CONNECTED, name)
+            },
+            onDisconnected = { broadcastStatus(BluetoothSppManager.Status.DISCONNECTED, null) },
+            onPayloadReceived = { payload -> audioPipeline?.playPayload(payload) }
+        )
+        broadcastStatus(BluetoothSppManager.Status.WAITING, null)
+        sppManager?.start()
+        audioPipeline?.start { payload, len -> sppManager?.send(payload, len) }
+    }
+
+    companion object {
+        const val ACTION_INTERCOM_STATUS = "com.jay.ACTION_INTERCOM_STATUS"
+        const val EXTRA_STATUS = "status"
+        const val EXTRA_DETAIL = "detail"
+        @Volatile var running: Boolean = false
     }
 }
