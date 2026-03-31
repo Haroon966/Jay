@@ -11,6 +11,6 @@ idf_component_register(
         bt
         nvs_flash
         freertos
-        esp_log
+        log
         esphome__micro-opus
 )

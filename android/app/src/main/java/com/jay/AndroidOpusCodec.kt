@@ -1,8 +1,8 @@
 package com.jay
 
-import org.concentus.OpusApplication
-import org.concentus.OpusDecoder
-import org.concentus.OpusEncoder
+import io.github.jaredmdobson.OpusApplication
+import io.github.jaredmdobson.OpusDecoder
+import io.github.jaredmdobson.OpusEncoder
 
 /**
  * Lightweight wrapper for 16 kHz mono Opus encode/decode.
