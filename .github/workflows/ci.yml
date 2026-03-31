@@ -74,6 +74,7 @@ jobs:
     container: espressif/idf:release-v5.2
     defaults:
       run:
+        shell: bash
         working-directory: firmware
     steps:
       - name: Checkout
@@ -81,5 +82,6 @@ jobs:
 
       - name: Build ESP32 firmware
         run: |
+          . /opt/esp/idf/export.sh
           idf.py set-target esp32
           idf.py build
